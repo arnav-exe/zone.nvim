@@ -52,7 +52,7 @@ function dvd.start()
     mod.on_each_tick(function()
         if not vim.api.nvim_win_is_valid(win) then return end
         local config = vim.api.nvim_win_get_config(win)
-        local row, col = config["row"][false], config["col"][false]
+        local row, col = config["row"], config["col"]
 
         check_touch_side(row, col, text_h, text_w)
 
