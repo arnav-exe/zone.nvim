@@ -7,37 +7,32 @@ local hl = 'Type'
 
 local mod = require("zone.helper")
 
+-- check if logo touched border
 local check_touch_side = function(row, col, text_h, text_w)
     local old = direction
     local first, second = unpack(direction)
-    local should_change_color = false
+    local change_color = false
     
     if (row + text_h) >= vim.o.lines-1 then 
         direction = {first, "u"}
-        should_change_color = true
+        change_color = true
     end
     if (col + text_w) >= vim.o.columns then 
         direction = {"l", second}
-        should_change_color = true
+        change_color = true
     end
     if col <= 1 then 
         direction = {"r", second}
-        should_change_color = true
+        change_color = true
     end
     if row <= 1 then 
         direction = {first, "d"}
-        should_change_color = true
+        change_color = true
     end
     
-    -- Change color when hitting any border
-    if should_change_color then
-        local colors = {
-            'Identifier', 'Keyword', 'Type', 'Function',
-            'String', 'Number', 'Boolean', 'Constant',
-            'PreProc', 'Statement', 'Special', 'Title',
-            'Error', 'Todo', 'WarningMsg', 'MoreMsg',
-            'Question', 'Directory'
-        }
+    -- change color logic (TODO: build custom randomizer to prevent same value from being randomly selected again)
+    if change_color then
+        local colors = {"Identifier", "Keyword", "Function", "String", "Number", "PreProc"}
         hl = colors[math.random(#colors)]
     end
 end
@@ -57,17 +52,17 @@ function dvd.start()
     local r, c = get_rand(text_h, text_w)
 
     mod.create_and_initiate(function()
-        -- Create background buffer and window to cover everything
+        -- create temp bg buffer overlaying over curr buffer
         bg_buf = vim.api.nvim_create_buf(false, true)
         
-        -- Fill background buffer with empty lines
+        -- fill bg buffer with empty lines
         local bg_lines = {}
         for i = 1, vim.o.lines do
             table.insert(bg_lines, string.rep(" ", vim.o.columns))
         end
         vim.api.nvim_buf_set_lines(bg_buf, 0, -1, false, bg_lines)
         
-        -- Create full-screen background window
+        -- create fullscreen bg window
         bg_win = vim.api.nvim_open_win(bg_buf, false, {
             relative = "editor",
             style = 'minimal',
@@ -75,11 +70,11 @@ function dvd.start()
             height = vim.o.lines,
             row = 0,
             col = 0,
-            zindex = 10 -- Ensure it's below the DVD logo
+            zindex = 10 -- should exist below logo
         })
         vim.api.nvim_win_set_option(bg_win, 'winhl', 'Normal:Normal')
         
-        -- Create DVD logo buffer and window (same as before)
+        -- create DVD logo buffer and window
         buf = vim.api.nvim_create_buf(false, true)
         win = vim.api.nvim_open_win(buf, false, {
             relative = "editor", 
@@ -88,20 +83,21 @@ function dvd.start()
             width = text_w, 
             row = r, 
             col = c,
-            zindex = 50 -- Ensure it's above the background
+            zindex = 50 -- should exist above bg
         })
         vim.api.nvim_win_set_option(win, 'winhl', 'Normal:'..hl)
         vim.api.nvim_buf_set_lines(buf, 0, #lines, false, lines)
     end, local_opts)
 
+    -- close buffer and window
     mod.on_exit = function()
-        -- Close both windows and delete both buffers
         pcall(vim.api.nvim_win_close, win, true)
         pcall(vim.api.nvim_buf_delete, buf, {force=true})
         pcall(vim.api.nvim_win_close, bg_win, true)
         pcall(vim.api.nvim_buf_delete, bg_buf, {force=true})
     end
 
+    -- update logo pos each tick
     mod.on_each_tick(function()
         if not vim.api.nvim_win_is_valid(win) then return end
         local config = vim.api.nvim_win_get_config(win)
@@ -133,5 +129,5 @@ return dvd
 
 
 -- TODO:
--- there is a yellow, light orange, and black colour (worst), all of which spawn some kind of visible background on the logo - remove these colours so logo is seamless
 -- add a system to ensure random colour selector cant select currently selected colour (gives impression that colour failed to change on bounce)
+-- likely have to build my own randomizer func
