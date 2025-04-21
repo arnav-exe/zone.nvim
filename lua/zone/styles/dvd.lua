@@ -4,8 +4,19 @@ local win, buf, bg_win, bg_buf
 local local_opts = require("zone.config").dvd
 local direction = {"r", "d"}
 local hl = 'Type'
+local idx = -1
 
 local mod = require("zone.helper")
+
+local function constRandomizer(arr, arr_idx)
+    local rand_idx = math.random(#arr)
+    if rand_idx == arr_idx and rand_idx == #arr then
+        rand_idx = rand_idx - 1
+    elseif rand_idx == arr_idx then
+        rand_idx = rand_idx + 1
+    end
+    return rand_idx
+end
 
 -- check if logo touched border
 local check_touch_side = function(row, col, text_h, text_w)
@@ -30,10 +41,10 @@ local check_touch_side = function(row, col, text_h, text_w)
         change_color = true
     end
     
-    -- change color logic (TODO: build custom randomizer to prevent same value from being randomly selected again)
     if change_color then
         local colors = {"Identifier", "Keyword", "Function", "String", "Number", "PreProc"}
-        hl = colors[math.random(#colors)]
+        idx = constRandomizer(colors, idx)
+        hl = colors[idx]
     end
 end
 
