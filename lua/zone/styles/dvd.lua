@@ -108,7 +108,7 @@ function dvd.start()
         pcall(vim.api.nvim_buf_delete, bg_buf, {force=true})
     end
 
-    -- update logo pos each tick
+    -- update logo position each tick
     mod.on_each_tick(function()
         if not vim.api.nvim_win_is_valid(win) then return end
         local config = vim.api.nvim_win_get_config(win)
@@ -136,9 +136,3 @@ function dvd.start()
 end
 
 return dvd
-
-
-
--- TODO:
--- add a system to ensure random colour selector cant select currently selected colour (gives impression that colour failed to change on bounce)
--- likely have to build my own randomizer func
